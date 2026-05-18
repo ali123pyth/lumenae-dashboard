@@ -326,6 +326,22 @@ body::before {
   font-size: 0.6rem;
   color: var(--muted);
 }
+.data-table td:first-child {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  text-align: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.data-table th:first-child {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  text-align: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
 
 /* ── SECTION TITLE ── */
 .section-title {
@@ -545,6 +561,11 @@ body::before {
     <div class="kpi-value amber" id="kpi6">AED 273K</div>
     <div class="kpi-sub">+15% every 5 years</div>
   </div>
+  <div class="kpi" id="kpi-countdown-card">
+    <div class="kpi-label">Construction Deadline</div>
+    <div class="kpi-value" id="kpi-countdown" style="font-size:1.1rem;">—</div>
+    <div class="kpi-sub" id="kpi-countdown-sub">18-month deadline</div>
+  </div>
 </div>
 
 <!-- TABS -->
@@ -568,7 +589,7 @@ body::before {
   <p class="section-title">Construction Phase Obligations</p>
   <div class="table-wrap">
     <table class="data-table" id="tbl-construction">
-      <thead><tr><th>#</th><th>Action</th><th>By When</th><th>Owner</th><th>Status</th><th>Notes</th></tr></thead>
+      <thead><tr><th style="width:36px;min-width:36px;">#</th><th>Action</th><th>By When</th><th>Owner</th><th>Status</th><th>Notes</th></tr></thead>
       <tbody><tr class="loading-row"><td colspan="6">Loading data…</td></tr></tbody>
     </table>
   </div>
@@ -579,7 +600,7 @@ body::before {
   <p class="section-title">Recurring Obligations</p>
   <div class="table-wrap">
     <table class="data-table" id="tbl-recurring">
-      <thead><tr><th>#</th><th>Obligation</th><th>Frequency</th><th>Owner</th><th>Clause</th><th>Notes</th></tr></thead>
+      <thead><tr><th style="width:36px;min-width:36px;">#</th><th>Obligation</th><th>Frequency</th><th>Owner</th><th>Clause</th><th>Notes</th></tr></thead>
       <tbody><tr class="loading-row"><td colspan="6">Loading data…</td></tr></tbody>
     </table>
   </div>
@@ -649,13 +670,23 @@ function parseCSVLine(line) {
 function statusPill(val) {
   if (!val) return '';
   const v = val.toLowerCase().trim();
-  let cls = 'muted', label = val;
-  if (/overdue|critical|urgent|failed|default/.test(v))       { cls = 'red';    }
-  else if (/pending|due|not.start|todo|not.done|action/.test(v)) { cls = 'amber'; }
-  else if (/in.prog|ongoing|active|started/.test(v))          { cls = 'blue';  }
-  else if (/done|complete|paid|submitted|approved|ok/.test(v)){ cls = 'green'; }
-  else if (/hold|defer|wait|review/.test(v))                  { cls = 'yellow';}
-  return `<span class="pill pill-${cls}">${label}</span>`;
+  let cls = 'muted';
+  // 🔴 RED — urgent, overdue, failed, defaulted
+  if (/overdue|critical|urgent|failed|default|breach|violation|expired|missed|late/.test(v))
+    cls = 'red';
+  // 🟠 AMBER — pending, not started, todo, action needed
+  else if (/pending|not start|not done|todo|to.do|action required|required|outstanding|open/.test(v))
+    cls = 'amber';
+  // 🔵 BLUE — in progress, ongoing, active, started, in review
+  else if (/in.prog|ongoing|active|started|in review|processing|underway/.test(v))
+    cls = 'blue';
+  // 🟢 GREEN — done, complete, paid, approved, submitted, cleared
+  else if (/done|complete|paid|submitted|approved|cleared|ok|yes|obtained|secured|signed|settled/.test(v))
+    cls = 'green';
+  // 🟡 YELLOW — on hold, deferred, waiting, scheduled
+  else if (/hold|defer|wait|scheduled|planned|upcoming|tbd|n\/a/.test(v))
+    cls = 'yellow';
+  return `<span class="pill pill-${cls}">${val}</span>`;
 }
 
 function severityPill(val) {
@@ -828,6 +859,47 @@ function renderDoNotDo(data) {
 }
 
 // ── LOAD ALL ──────────────────────────────────────────────────────────────────
+// ── CONSTRUCTION DEADLINE COUNTDOWN ─────────────────────────────────────
+// Update EFFECTIVE_DATE below once you confirm the signed date
+const EFFECTIVE_DATE = new Date(2026, 4, 8); // 8 May 2026 — change if needed
+const DEADLINE_18M = new Date(EFFECTIVE_DATE);
+DEADLINE_18M.setMonth(DEADLINE_18M.getMonth() + 18);
+
+function updateCountdown() {
+  const now   = new Date();
+  const diff  = DEADLINE_18M - now;
+  const el    = document.getElementById('kpi-countdown');
+  const sub   = document.getElementById('kpi-countdown-sub');
+  if (!el) return;
+
+  if (diff <= 0) {
+    el.textContent  = 'EXPIRED';
+    el.className    = 'kpi-value red';
+    sub.textContent = 'Deadline passed';
+    return;
+  }
+
+  const totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const months    = Math.floor(totalDays / 30);
+  const days      = totalDays % 30;
+  el.textContent  = months > 0 ? `${months}m ${days}d` : `${totalDays}d`;
+
+  if (totalDays <= 60) {
+    el.className    = 'kpi-value red';
+    sub.textContent = '⚠ Critical — under 60 days';
+  } else if (totalDays <= 120) {
+    el.className    = 'kpi-value amber';
+    sub.textContent = '⚡ Approaching deadline';
+  } else {
+    el.className    = 'kpi-value green';
+    const opts      = { day: 'numeric', month: 'short', year: 'numeric' };
+    sub.textContent = `Due ${DEADLINE_18M.toLocaleDateString('en-GB', opts)}`;
+  }
+}
+
+updateCountdown();
+setInterval(updateCountdown, 60000);
+
 async function loadAll() {
   const btn = document.getElementById('btnRefresh');
   btn.classList.add('spinning');
