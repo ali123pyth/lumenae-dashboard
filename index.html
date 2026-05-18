@@ -491,6 +491,39 @@ body::before {
   letter-spacing: 0.06em;
 }
 
+
+/* ── CLAUSE BADGE ── */
+.clause-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--gold);
+  background: rgba(200,184,106,0.08);
+  border: 1px solid rgba(200,184,106,0.2);
+  border-radius: 2px;
+  padding: 0.15rem 0.45rem;
+  white-space: nowrap;
+  cursor: default;
+  transition: all 0.15s;
+  margin: 1px 2px;
+}
+.clause-badge:hover {
+  background: rgba(200,184,106,0.18);
+  border-color: rgba(200,184,106,0.45);
+  color: var(--gold2);
+}
+.clause-page {
+  color: var(--muted2);
+  font-size: 0.58rem;
+  margin-left: 1px;
+}
+.clause-badge:hover .clause-page {
+  color: var(--olive2);
+}
+
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -637,6 +670,84 @@ const SHEETS = {
   donotdo:      'https://docs.google.com/spreadsheets/d/e/2PACX-1vQVkM_D_pVucH7Ik7HDaQx4LyqFsVYbJS9BJr_1oMf0-USWtG50Jqc9Id-AIQeBToCy3HTTQtKrGruT/pub?gid=167928095&single=true&output=csv'
 };
 
+
+// ── CLAUSE MAP — extracted from Musataha Agreement TOC ───────────────────
+const CLAUSE_MAP = {
+  "1":  { name: "Definitions and Interpretation", page: 1 },
+  "2":  { name: "Grant of Musataha and other rights", page: 8 },
+  "3":  { name: "Land rent and other payments", page: 9 },
+  "4":  { name: "Security", page: 10 },
+  "5":  { name: "Outgoings, utilities and services", page: 11 },
+  "6":  { name: "ADPC Works", page: 12 },
+  "7":  { name: "Occupier\'s Works", page: 13 },
+  "8":  { name: "Alterations", page: 14 },
+  "9":  { name: "Notification by the Occupier", page: 15 },
+  "10": { name: "Licences", page: 15 },
+  "11": { name: "Quiet enjoyment", page: 15 },
+  "12": { name: "Exclusion of ADPC\'s Liability", page: 16 },
+  "13": { name: "Insurance", page: 16 },
+  "14": { name: "Registration of this Musataha Agreement", page: 18 },
+  "15": { name: "Condition of Plot and Environmental Compliance", page: 18 },
+  "16": { name: "Repair and maintenance obligation", page: 20 },
+  "17": { name: "Dealings by ADPC", page: 20 },
+  "18": { name: "Dealings by the Occupier", page: 20 },
+  "19": { name: "Extensions of time", page: 21 },
+  "20": { name: "Events of default", page: 21 },
+  "21": { name: "Occupier Break Option", page: 23 },
+  "22": { name: "Termination", page: 24 },
+  "23": { name: "Decommissioning, demolition and land remediation", page: 25 },
+  "24": { name: "ADPC self-help remedy — decommissioning", page: 26 },
+  "25": { name: "Sales or Use Tax or other taxes", page: 26 },
+  "26": { name: "Indemnities", page: 26 },
+  "27": { name: "The Occupier\'s acknowledgements", page: 27 },
+  "28": { name: "Mutual assistance and co-operation", page: 27 },
+  "29": { name: "Statistical reporting", page: 27 },
+  "30": { name: "Continuation of Musataha Agreement", page: 28 },
+  "31": { name: "Condemnation", page: 29 },
+  "32": { name: "Renewal of term", page: 30 },
+  "33": { name: "Relationship of the parties", page: 30 },
+  "34": { name: "Attornment", page: 31 },
+  "35": { name: "Confidentiality", page: 31 },
+  "36": { name: "General", page: 31 },
+  "37": { name: "Notices", page: 31 },
+  "38": { name: "Dispute resolution", page: 32 },
+  "39": { name: "Governing law and jurisdiction", page: 33 },
+  "40": { name: "Waiver of immunity", page: 33 },
+  "41": { name: "No waiver and severance", page: 33 },
+  "42": { name: "No variation", page: 34 },
+  "43": { name: "Legal costs", page: 34 },
+  "44": { name: "No benchmarking", page: 34 },
+};
+
+// Render a Clause column cell — parses any format like:
+// "13", "Cl. 13", "13.4", "Clause 13", "3.6", "13 / 20", "13, 20"
+function clauseBadge(val) {
+  if (!val || val.trim() === '' || val.trim() === '-' || val.trim().toLowerCase() === 'n/a') return val || '';
+
+  // Extract all clause numbers from the string
+  const nums = [];
+  // Match patterns: "13.4", "Cl.13", "Clause 13", "13", "3.6"
+  const re = /(?:cl(?:ause)?\.?\s*)?(\d{1,2})(?:\.\d+)?/gi;
+  let m;
+  const seen = new Set();
+  while ((m = re.exec(val)) !== null) {
+    const n = m[1];
+    if (!seen.has(n)) { seen.add(n); nums.push(n); }
+  }
+
+  if (nums.length === 0) return val; // not a clause reference — return as-is
+
+  return nums.map(n => {
+    const info = CLAUSE_MAP[n];
+    const pageStr = info ? ` · p.${info.page}` : '';
+    const tooltip = info ? info.name : '';
+    const subMatch = val.match(new RegExp(n + '\\.(\\d+)'));
+    const sub = subMatch ? '.' + subMatch[1] : '';
+    return `<span class="clause-badge" title="${tooltip}">Cl.${n}${sub}<span class="clause-page">${pageStr}</span></span>`;
+  }).join(' ');
+}
+
+
 // ── CSV PARSER ────────────────────────────────────────────────────────────────
 function parseCSV(text) {
   const lines = text.trim().split('\n');
@@ -736,6 +847,7 @@ function renderConstruction(data) {
       if (/status/.test(hLow)) val = statusPill(val) || val;
       else if (/severity|priority|risk/.test(hLow)) val = severityPill(val) || val;
       else if (/^#$|^no$|^num/.test(hLow)) val = `<span class="row-num">${val}</span>`;
+      else if (/clause|ref|article|section/.test(hLow)) val = clauseBadge(val) || val;
       return `<td>${val}</td>`;
     });
     return `<tr>${cells.join('')}</tr>`;
@@ -766,6 +878,7 @@ function renderRecurring(data) {
       if (/status/.test(hLow)) val = statusPill(val) || val;
       else if (/severity|priority|risk/.test(hLow)) val = severityPill(val) || val;
       else if (/^#$|^no$|^num/.test(hLow)) val = `<span class="row-num">${val}</span>`;
+      else if (/clause|ref|article|section/.test(hLow)) val = clauseBadge(val) || val;
       return `<td>${val}</td>`;
     });
     return `<tr>${cells.join('')}</tr>`;
@@ -853,7 +966,7 @@ function renderDoNotDo(data) {
       </div>
       ${conseq ? `<div class="wc-consequence">→ ${conseq}</div>` : ''}
       ${extra  ? `<div class="wc-consequence" style="margin-top:0.25rem;">${extra}</div>` : ''}
-      ${clause ? `<div class="wc-clause">📋 ${clause}</div>` : ''}
+      ${clause ? `<div class="wc-clause">📋 ${clauseBadge(clause)}</div>` : ''}
     </div>`;
   }).join('');
 }
