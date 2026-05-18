@@ -5,41 +5,56 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lumenae — KIZAD Contract Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #0e0f0d;
-  --bg2:       #141510;
-  --bg3:       #1a1c16;
-  --border:    rgba(185,190,130,0.12);
-  --border2:   rgba(185,190,130,0.22);
-  --gold:      #c8b86a;
-  --gold2:     #e8d48a;
-  --olive:     #8a9455;
-  --olive2:    #b0be6e;
-  --cream:     #f0ead8;
-  --muted:     #6b6e5e;
-  --muted2:    #8a8d7a;
-  --red:       #d4543a;
-  --red-bg:    rgba(212,84,58,0.12);
-  --amber:     #d4943a;
-  --amber-bg:  rgba(212,148,58,0.12);
-  --yellow:    #c8b86a;
-  --yellow-bg: rgba(200,184,106,0.12);
-  --green:     #6aad7a;
-  --green-bg:  rgba(106,173,122,0.12);
-  --blue:      #6a9ec8;
-  --blue-bg:   rgba(106,158,200,0.12);
-  --text:      #ddd8c8;
-  --text2:     #a8a898;
+  /* ── Lumenae Brand Palette ── */
+  --olive:     #6d6d58;   /* Stone Olive — primary brand colour */
+  --olive2:    #8a8a72;   /* lighter olive for accents */
+  --olive3:    #4e4e40;   /* darker olive for emphasis */
+
+  /* ── Surface & Background ── */
+  --bg:        #f5f4f0;   /* warm off-white — primary background */
+  --bg2:       #edecea;   /* slightly deeper surface */
+  --bg3:       #e4e3de;   /* card hover / table header */
+
+  /* ── Borders ── */
+  --border:    rgba(109,109,88,0.14);
+  --border2:   rgba(109,109,88,0.28);
+
+  /* ── Typography ── */
+  --text:      #2a2a22;   /* near-black body text */
+  --text2:     #5a5a4a;   /* secondary text */
+  --muted:     #8a8a78;   /* muted labels */
+  --muted2:    #a0a090;   /* lightest labels */
+  --cream:     #2a2a22;   /* was cream/light — now maps to dark text on light bg */
+
+  /* ── Status Colours (adjusted for light bg) ── */
+  --gold:      #7a6a30;   /* deep gold — readable on light */
+  --gold2:     #5c4e20;
+  --red:       #b03a24;
+  --red-bg:    rgba(176,58,36,0.08);
+  --amber:     #a06020;
+  --amber-bg:  rgba(160,96,32,0.08);
+  --yellow:    #7a6a30;
+  --yellow-bg: rgba(122,106,48,0.08);
+  --green:     #3a7a4a;
+  --green-bg:  rgba(58,122,74,0.08);
+  --blue:      #2a5a8a;
+  --blue-bg:   rgba(42,90,138,0.08);
+
+  /* ── Fonts ── */
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-body:  'Inter', sans-serif;
+  --font-mono:  'DM Mono', monospace;
 }
 
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -51,8 +66,8 @@ body::before {
   content: '';
   position: fixed; inset: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 10% 20%, rgba(138,148,85,0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 80% at 90% 80%, rgba(200,184,106,0.04) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 50% at 10% 20%, rgba(109,109,88,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 90% 80%, rgba(109,109,88,0.03) 0%, transparent 60%);
   pointer-events: none; z-index: 0;
 }
 
@@ -62,30 +77,30 @@ body::before {
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 2rem;
   height: 56px;
-  background: rgba(14,15,13,0.92);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
+  background: var(--olive);
+  border-bottom: 1px solid var(--olive3);
 }
 
 .topbar-left { display: flex; align-items: center; gap: 1.5rem; }
 
 .brand {
-  font-family: 'DM Serif Display', serif;
-  font-size: 1.1rem;
-  color: var(--gold2);
-  letter-spacing: 0.01em;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #f5f4f0;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
-.brand span { color: var(--olive2); font-style: italic; }
+.brand span { color: rgba(245,244,240,0.7); font-style: italic; }
 
 .badge-contract {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.62rem;
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--muted2);
-  border: 1px solid var(--border);
+  color: rgba(245,244,240,0.6);
+  border: 1px solid rgba(245,244,240,0.2);
   padding: 0.2rem 0.6rem;
   border-radius: 2px;
 }
@@ -94,48 +109,48 @@ body::before {
 
 .fzr-link {
   display: flex; align-items: center; gap: 0.45rem;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: #f5f4f0;
   text-decoration: none;
-  border: 1px solid rgba(200,184,106,0.3);
+  border: 1px solid rgba(245,244,240,0.3);
   padding: 0.3rem 0.8rem;
   border-radius: 2px;
   transition: all 0.2s;
-  background: rgba(200,184,106,0.05);
+  background: rgba(245,244,240,0.08);
 }
 .fzr-link:hover {
-  background: rgba(200,184,106,0.12);
-  border-color: var(--gold);
-  color: var(--gold2);
+  background: rgba(245,244,240,0.18);
+  border-color: rgba(245,244,240,0.6);
+  color: #ffffff;
 }
 .fzr-link svg { width: 10px; height: 10px; opacity: 0.7; }
 
 .refresh-info {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.62rem;
-  color: var(--muted);
+  color: rgba(245,244,240,0.55);
   white-space: nowrap;
 }
 
 .btn-refresh {
   display: flex; align-items: center; gap: 0.35rem;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.65rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--olive2);
-  background: rgba(138,148,85,0.1);
-  border: 1px solid rgba(138,148,85,0.25);
+  color: #f5f4f0;
+  background: rgba(245,244,240,0.1);
+  border: 1px solid rgba(245,244,240,0.25);
   padding: 0.28rem 0.7rem;
   border-radius: 2px;
   cursor: pointer;
   transition: all 0.2s;
 }
-.btn-refresh:hover { background: rgba(138,148,85,0.2); border-color: var(--olive2); }
+.btn-refresh:hover { background: rgba(245,244,240,0.2); border-color: rgba(245,244,240,0.5); }
 .btn-refresh svg { width: 11px; height: 11px; }
 .btn-refresh.spinning svg { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -148,7 +163,7 @@ body::before {
 }
 
 .header-meta {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.65rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -157,17 +172,18 @@ body::before {
 }
 
 .header-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 2rem;
-  color: var(--cream);
+  font-family: var(--font-serif);
+  font-size: 2.4rem;
+  font-weight: 500;
+  color: var(--olive3);
   line-height: 1.1;
   margin-bottom: 0.3rem;
 }
-.header-title em { color: var(--gold); font-style: italic; }
+.header-title em { color: var(--olive); font-style: italic; font-weight: 400; }
 
 .header-sub {
   font-size: 0.8rem;
-  color: var(--muted2);
+  color: var(--muted);
   font-weight: 300;
 }
 
@@ -198,9 +214,10 @@ body::before {
 }
 
 .kpi-value {
-  font-family: 'DM Serif Display', serif;
-  font-size: 1.6rem;
-  color: var(--cream);
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: var(--olive3);
   line-height: 1;
 }
 .kpi-value.red    { color: var(--red); }
@@ -218,7 +235,7 @@ body::before {
 .tabs-bar {
   display: flex; align-items: center;
   gap: 0; border-bottom: 1px solid var(--border);
-  background: var(--bg2);
+  background: #ffffff;
   position: sticky; top: 56px; z-index: 90;
   overflow-x: auto;
 }
@@ -227,20 +244,20 @@ body::before {
 .tab-btn {
   display: flex; align-items: center; gap: 0.5rem;
   padding: 0.85rem 1.5rem;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted2);
+  color: var(--muted);
   background: none; border: none;
   border-bottom: 2px solid transparent;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s;
 }
-.tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.02); }
-.tab-btn.active { color: var(--gold2); border-bottom-color: var(--gold); }
+.tab-btn:hover { color: var(--olive3); background: rgba(109,109,88,0.04); }
+.tab-btn.active { color: var(--olive3); border-bottom-color: var(--olive); }
 
 .tab-count {
   font-size: 0.58rem;
@@ -250,7 +267,7 @@ body::before {
   border-radius: 2px;
   color: var(--muted2);
 }
-.tab-btn.active .tab-count { background: rgba(200,184,106,0.1); border-color: rgba(200,184,106,0.3); color: var(--gold); }
+.tab-btn.active .tab-count { background: rgba(109,109,88,0.1); border-color: rgba(109,109,88,0.3); color: var(--olive); }
 
 /* ── TAB PANELS ── */
 .tab-panel { display: none; padding: 1.5rem 2rem; position: relative; z-index: 1; }
@@ -275,12 +292,12 @@ body::before {
 }
 
 .data-table th {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.6rem;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted2);
+  color: var(--muted);
   padding: 0.75rem 1rem;
   text-align: left;
   white-space: nowrap;
@@ -297,7 +314,7 @@ body::before {
 .data-table tbody tr:last-child td { border-bottom: none; }
 
 .data-table tbody tr:hover td {
-  background: rgba(255,255,255,0.02);
+  background: rgba(109,109,88,0.04);
   color: var(--text);
 }
 
@@ -345,7 +362,7 @@ body::before {
 
 /* ── SECTION TITLE ── */
 .section-title {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -389,7 +406,7 @@ body::before {
 .milestone-card:hover { background: var(--bg3); }
 
 .mc-num {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.58rem;
   color: var(--muted);
   letter-spacing: 0.1em;
@@ -398,14 +415,14 @@ body::before {
 .mc-title {
   font-size: 0.82rem;
   font-weight: 500;
-  color: var(--cream);
+  color: var(--olive3);
   margin-bottom: 0.3rem;
   line-height: 1.3;
 }
 .mc-date {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.65rem;
-  color: var(--gold);
+  color: var(--olive);
   margin-bottom: 0.5rem;
 }
 .mc-detail {
@@ -452,7 +469,7 @@ body::before {
 .wc-action {
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--cream);
+  color: var(--olive3);
   line-height: 1.3;
 }
 .wc-consequence {
@@ -478,14 +495,15 @@ body::before {
 }
 
 .footer-brand {
-  font-family: 'DM Serif Display', serif;
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--olive);
 }
-.footer-brand em { color: var(--gold); font-style: italic; }
+.footer-brand em { color: var(--olive2); font-style: italic; }
 
 .footer-meta {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.6rem;
   color: var(--muted);
   letter-spacing: 0.06em;
@@ -497,12 +515,12 @@ body::before {
   display: inline-flex;
   align-items: center;
   gap: 0;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.62rem;
   font-weight: 500;
-  color: var(--gold);
-  background: rgba(200,184,106,0.08);
-  border: 1px solid rgba(200,184,106,0.2);
+  color: var(--olive);
+  background: rgba(109,109,88,0.08);
+  border: 1px solid rgba(109,109,88,0.22);
   border-radius: 2px;
   padding: 0.15rem 0.45rem;
   white-space: nowrap;
@@ -511,9 +529,9 @@ body::before {
   margin: 1px 2px;
 }
 .clause-badge:hover {
-  background: rgba(200,184,106,0.18);
-  border-color: rgba(200,184,106,0.45);
-  color: var(--gold2);
+  background: rgba(109,109,88,0.16);
+  border-color: rgba(109,109,88,0.4);
+  color: var(--olive3);
 }
 .clause-page {
   color: var(--muted2);
@@ -539,15 +557,15 @@ body::before {
 @keyframes fadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
 
 .modal-box {
-  background: var(--bg2);
-  border: 1px solid rgba(212,84,58,0.35);
+  background: #ffffff;
+  border: 1px solid rgba(176,58,36,0.3);
   border-radius: 6px;
   width: 100%;
   max-width: 860px;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,84,58,0.15);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(176,58,36,0.12);
 }
 
 .modal-header {
@@ -561,7 +579,7 @@ body::before {
 
 .modal-title {
   display: flex; align-items: center; gap: 0.6rem;
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -631,16 +649,16 @@ body::before {
   font-size: 0.74rem;
 }
 .modal-table th {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.58rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted2);
+  color: var(--muted);
   padding: 0.55rem 0.85rem;
   background: var(--bg3);
   text-align: left;
   white-space: nowrap;
-  border-bottom: 1px solid rgba(212,84,58,0.15);
+  border-bottom: 1px solid rgba(176,58,36,0.15);
 }
 .modal-table td {
   padding: 0.6rem 0.85rem;
@@ -666,19 +684,19 @@ body::before {
   letter-spacing: 0.06em;
 }
 .modal-jump-btn {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--olive2);
-  background: rgba(138,148,85,0.1);
-  border: 1px solid rgba(138,148,85,0.25);
+  color: var(--olive);
+  background: rgba(109,109,88,0.08);
+  border: 1px solid rgba(109,109,88,0.25);
   padding: 0.3rem 0.8rem;
   border-radius: 2px;
   cursor: pointer;
   transition: all 0.15s;
 }
-.modal-jump-btn:hover { background: rgba(138,148,85,0.2); border-color: var(--olive2); }
+.modal-jump-btn:hover { background: rgba(109,109,88,0.16); border-color: var(--olive); }
 
 /* Make critical KPI clickable */
 #kpi-critical-card {
@@ -690,8 +708,8 @@ body::before {
 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: rgba(109,109,88,0.3); border-radius: 3px; }
 </style>
 </head>
 <body>
@@ -699,7 +717,7 @@ body::before {
 <!-- TOP BAR -->
 <header class="topbar">
   <div class="topbar-left">
-    <div class="brand">Lumena<em>e</em> · KIZAD</div>
+    <div class="brand">Lumen<span>ae</span> · KIZAD</div>
     <span class="badge-contract">Plot 15G1 · ICAD I · 50Y Musataha</span>
   </div>
   <div class="topbar-right">
