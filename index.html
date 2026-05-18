@@ -524,6 +524,170 @@ body::before {
   color: var(--olive2);
 }
 
+
+/* ── CRITICAL MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.modal-overlay.open { display: flex; animation: fadeIn 0.18s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+.modal-box {
+  background: var(--bg2);
+  border: 1px solid rgba(212,84,58,0.35);
+  border-radius: 6px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,84,58,0.15);
+}
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid rgba(212,84,58,0.2);
+  background: rgba(212,84,58,0.06);
+  border-radius: 6px 6px 0 0;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  display: flex; align-items: center; gap: 0.6rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.modal-title-icon { font-size: 1rem; }
+.modal-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--muted2);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+  margin-left: 0.4rem;
+}
+
+.modal-close {
+  width: 28px; height: 28px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--muted2);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.modal-close:hover { border-color: var(--red); color: var(--red); background: rgba(212,84,58,0.08); }
+
+.modal-body {
+  overflow-y: auto;
+  padding: 1rem;
+  flex: 1;
+}
+.modal-body::-webkit-scrollbar { width: 4px; }
+.modal-body::-webkit-scrollbar-thumb { background: rgba(212,84,58,0.3); border-radius: 2px; }
+
+.modal-empty {
+  text-align: center;
+  padding: 3rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+
+.modal-source-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--olive);
+  margin: 0.8rem 0 0.4rem;
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.modal-source-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.modal-source-label:first-child { margin-top: 0; }
+
+.modal-table-wrap { overflow-x: auto; border: 1px solid rgba(212,84,58,0.15); border-radius: 3px; margin-bottom: 0.5rem; }
+
+.modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.74rem;
+}
+.modal-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 0.55rem 0.85rem;
+  background: var(--bg3);
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(212,84,58,0.15);
+}
+.modal-table td {
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  vertical-align: top;
+  line-height: 1.4;
+}
+.modal-table tbody tr:last-child td { border-bottom: none; }
+.modal-table tbody tr:hover td { background: rgba(212,84,58,0.04); color: var(--text); }
+.modal-table td:first-child { width: 36px; text-align: center; }
+
+.modal-footer {
+  padding: 0.75rem 1.4rem;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.modal-footer-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+.modal-jump-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--olive2);
+  background: rgba(138,148,85,0.1);
+  border: 1px solid rgba(138,148,85,0.25);
+  padding: 0.3rem 0.8rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.modal-jump-btn:hover { background: rgba(138,148,85,0.2); border-color: var(--olive2); }
+
+/* Make critical KPI clickable */
+#kpi-critical-card {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#kpi-critical-card:hover { background: rgba(212,84,58,0.07) !important; }
+#kpi-critical-card .kpi-label::after { content: ' ↗'; font-size: 0.55rem; opacity: 0.6; }
+
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -569,7 +733,7 @@ body::before {
     <div class="kpi-value gold" id="kpi1">—</div>
     <div class="kpi-sub">Phase obligations</div>
   </div>
-  <div class="kpi">
+  <div class="kpi" id="kpi-critical-card" onclick="openCriticalModal()" title="Click to view critical issues">
     <div class="kpi-label">Overdue / Critical</div>
     <div class="kpi-value red" id="kpi2">—</div>
     <div class="kpi-sub">Needs immediate action</div>
@@ -823,9 +987,13 @@ function renderConstruction(data) {
   document.getElementById('cnt1').textContent = rows.length;
   document.getElementById('kpi1').textContent = rows.length;
 
-  // Count overdue/critical
-  const critical = rows.filter(r => r.some(c => /overdue|critical|urgent/i.test(c))).length;
-  document.getElementById('kpi2').textContent = critical || '—';
+  // Count overdue/critical and store for modal
+  const criticalRows = rows.filter(r => r.some(c => /overdue|critical|urgent|failed|breach|expired|missed|late/i.test(c)));
+  const critical = criticalRows.length;
+  CRITICAL_ROWS = criticalRows;
+  CRITICAL_ROWS_DATA = { headers, rows: criticalRows };
+  const kpi2el = document.getElementById('kpi2');
+  kpi2el.textContent = critical || '—';
 
   const tbody = document.querySelector('#tbl-construction tbody');
 
@@ -972,6 +1140,63 @@ function renderDoNotDo(data) {
 }
 
 // ── LOAD ALL ──────────────────────────────────────────────────────────────────
+
+// ── CRITICAL MODAL ───────────────────────────────────────────────────────────
+// Store critical rows globally so modal can access them
+let CRITICAL_ROWS = [];
+
+function openCriticalModal() {
+  const overlay = document.getElementById('criticalModal');
+  const body    = document.getElementById('modalBody');
+  const count   = document.getElementById('modalCount');
+
+  if (CRITICAL_ROWS.length === 0) {
+    body.innerHTML = '<div class="modal-empty">🟢 No overdue or critical items found</div>';
+    count.textContent = '0 items';
+  } else {
+    count.textContent = `${CRITICAL_ROWS.length} item${CRITICAL_ROWS.length !== 1 ? 's' : ''}`;
+
+    // Build table from stored critical rows
+    const { headers, rows } = CRITICAL_ROWS_DATA;
+    const thead = headers.map(h => `<th>${h}</th>`).join('');
+    const tbody = rows.map(row => {
+      const cells = headers.map((h, j) => {
+        let val = row[j] || '';
+        const hLow = h.toLowerCase();
+        if (/status/.test(hLow))              val = statusPill(val) || val;
+        else if (/severity|priority/.test(hLow)) val = severityPill(val) || val;
+        else if (/clause|ref/.test(hLow))     val = clauseBadge(val) || val;
+        else if (/^#$|^no$/.test(hLow))       val = `<span class="row-num">${val}</span>`;
+        return `<td>${val}</td>`;
+      }).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+
+    body.innerHTML = `
+      <div class="modal-source-label">Construction Phase</div>
+      <div class="modal-table-wrap">
+        <table class="modal-table">
+          <thead><tr>${thead}</tr></thead>
+          <tbody>${tbody}</tbody>
+        </table>
+      </div>`;
+  }
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('criticalModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close on Escape key
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// Store for modal access
+let CRITICAL_ROWS_DATA = { headers: [], rows: [] };
+
 // ── CONSTRUCTION DEADLINE COUNTDOWN ─────────────────────────────────────
 // Update EFFECTIVE_DATE below once you confirm the signed date
 const EFFECTIVE_DATE = new Date(2026, 4, 8); // 8 May 2026 — change if needed
@@ -1046,8 +1271,32 @@ function switchTab(name, btn) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 loadAll();
-setInterval(loadAll, 5 * 60 * 1000); // auto-refresh every 5 min
+setInterval(loadAll, 12 * 60 * 60 * 1000); // auto-refresh every 12 hours
 </script>
+
+
+<!-- ── CRITICAL ISSUES MODAL ── -->
+<div class="modal-overlay" id="criticalModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="modal-title-icon">⛔</span>
+        Overdue &amp; Critical Issues
+        <span class="modal-count" id="modalCount">0 items</span>
+      </div>
+      <button class="modal-close" onclick="closeModal()" title="Close">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <div class="modal-empty">Loading…</div>
+    </div>
+    <div class="modal-footer">
+      <span class="modal-footer-note">Pulled live from Construction Phase sheet · click a tab to see full data</span>
+      <button class="modal-jump-btn" onclick="closeModal();switchTab('construction',document.querySelector('.tab-btn'))">
+        → View Full Table
+      </button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
