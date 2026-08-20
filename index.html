@@ -803,6 +803,45 @@ body::before {
 .analyst-send:hover { background: var(--gold2); }
 .analyst-send:disabled { background: var(--muted); cursor: not-allowed; }
 
+.mic-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; min-width: 40px; height: 40px;
+  color: var(--olive2);
+  background: rgba(138,148,85,0.1);
+  border: 1px solid rgba(138,148,85,0.25);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mic-btn:hover { background: rgba(138,148,85,0.2); border-color: var(--olive2); }
+.mic-btn svg { width: 16px; height: 16px; }
+.mic-btn.listening {
+  color: var(--red);
+  background: var(--red-bg);
+  border-color: rgba(212,84,58,0.4);
+  animation: micPulse 1.2s ease-in-out infinite;
+}
+@keyframes micPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(212,84,58,0.35); } 50% { box-shadow: 0 0 0 6px rgba(212,84,58,0); } }
+.mic-btn:disabled { opacity: 0.35; cursor: not-allowed; animation: none; }
+
+.lang-toggle {
+  display: flex; align-items: center; gap: 0.25rem;
+}
+.lang-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  color: var(--muted2);
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 0.25rem 0.45rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.lang-btn.active { color: var(--gold2); border-color: var(--gold); background: rgba(200,184,106,0.1); }
+.lang-btn:hover { color: var(--text); }
+
 .analyst-note {
   font-family: 'DM Mono', monospace;
   font-size: 0.6rem;
@@ -1134,11 +1173,21 @@ body::before {
       </div>
     </div>
     <div class="analyst-input-row">
+      <div class="lang-toggle" id="langToggle">
+        <button class="lang-btn active" id="langBtnEn" onclick="setVoiceLang('en-US', this)" title="Voice input in English">EN</button>
+        <button class="lang-btn" id="langBtnAr" onclick="setVoiceLang('ar-AE', this)" title="التعرف الصوتي بالعربية">AR</button>
+      </div>
+      <button class="mic-btn" id="micBtn" onclick="toggleVoiceInput()" title="Voice input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+          <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
+        </svg>
+      </button>
       <textarea class="analyst-input" id="analystInput" placeholder="Ask about deadlines, rent escalation, risk, DCR areas…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAnalystMessage();}"></textarea>
       <button class="analyst-send" id="analystSendBtn" onclick="sendAnalystMessage()">Send</button>
     </div>
   </div>
-  <div class="analyst-note">Runs on Claude Sonnet, grounded in the live data from all tabs on this dashboard · Requires the companion backend (see /api/chat) to be deployed with an Anthropic API key</div>
+  <div class="analyst-note">Runs on Claude Sonnet, grounded in the live data from all tabs on this dashboard · Requires the companion backend (see /api/chat) to be deployed with an Anthropic API key · 🎤 Voice input supports English &amp; Arabic (Chrome/Edge/Safari)</div>
 </div>
 
 <!-- FOOTER -->
@@ -2001,6 +2050,106 @@ async function sendAnalystMessage() {
     btn.disabled = false;
   }
 }
+
+// ── VOICE INPUT (English & Arabic) ──────────────────────────────────────────
+let voiceLang = 'en-US';
+let isListening = false;
+let currentRecognition = null;
+let baseTextBeforeVoice = '';
+const DEFAULT_INPUT_PLACEHOLDER = 'Ask about deadlines, rent escalation, risk, DCR areas…';
+
+function getSpeechRecognitionCtor() {
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function setVoiceLang(lang, btn) {
+  voiceLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('analystInput').setAttribute('lang', lang);
+  if (isListening) stopVoiceInput();
+}
+
+function toggleVoiceInput() {
+  const SR = getSpeechRecognitionCtor();
+  const micBtn = document.getElementById('micBtn');
+  if (!SR) {
+    micBtn.disabled = true;
+    micBtn.title = 'Voice input isn\u2019t supported in this browser — try Chrome, Edge, or Safari.';
+    return;
+  }
+  if (isListening) { stopVoiceInput(); return; }
+  startVoiceInput();
+}
+
+function startVoiceInput() {
+  const SR = getSpeechRecognitionCtor();
+  if (!SR) return;
+  const input = document.getElementById('analystInput');
+  const micBtn = document.getElementById('micBtn');
+
+  currentRecognition = new SR();
+  currentRecognition.lang = voiceLang;
+  currentRecognition.continuous = false;
+  currentRecognition.interimResults = true;
+  currentRecognition.maxAlternatives = 1;
+
+  baseTextBeforeVoice = input.value ? input.value.trim() + ' ' : '';
+  isListening = true;
+  micBtn.classList.add('listening');
+
+  currentRecognition.onresult = (event) => {
+    let transcript = '';
+    for (let i = 0; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    input.value = baseTextBeforeVoice + transcript;
+    if (isArabicText(input.value)) input.setAttribute('dir', 'rtl'); else input.removeAttribute('dir');
+  };
+
+  currentRecognition.onerror = (event) => {
+    isListening = false;
+    micBtn.classList.remove('listening');
+    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      input.placeholder = '⚠ Microphone access denied — allow it in your browser/site settings.';
+    } else if (event.error === 'no-speech') {
+      input.placeholder = 'No speech detected — tap the mic and try again.';
+    } else {
+      input.placeholder = '⚠ Voice input error: ' + event.error;
+    }
+    setTimeout(() => { input.placeholder = DEFAULT_INPUT_PLACEHOLDER; }, 3500);
+  };
+
+  currentRecognition.onend = () => {
+    isListening = false;
+    micBtn.classList.remove('listening');
+  };
+
+  try {
+    currentRecognition.start();
+  } catch (e) {
+    isListening = false;
+    micBtn.classList.remove('listening');
+  }
+}
+
+function stopVoiceInput() {
+  if (currentRecognition) { try { currentRecognition.stop(); } catch (e) {} }
+  isListening = false;
+  const micBtn = document.getElementById('micBtn');
+  if (micBtn) micBtn.classList.remove('listening');
+}
+
+// Disable the mic button gracefully if the browser has no speech recognition support
+(function checkVoiceSupport() {
+  if (!getSpeechRecognitionCtor()) {
+    const micBtn = document.getElementById('micBtn');
+    if (micBtn) {
+      micBtn.disabled = true;
+      micBtn.title = 'Voice input isn\u2019t supported in this browser — try Chrome, Edge, or Safari.';
+    }
+  }
+})();
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 loadAll();
