@@ -688,6 +688,128 @@ body::before {
 #kpi-critical-card:hover { background: rgba(212,84,58,0.07) !important; }
 #kpi-critical-card .kpi-label::after { content: ' ↗'; font-size: 0.55rem; opacity: 0.6; }
 
+/* ── AI ANALYST ── */
+.analyst-wrap {
+  display: flex; flex-direction: column;
+  height: calc(100vh - 56px - 190px - 46px - 3rem);
+  min-height: 420px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg2);
+  overflow: hidden;
+}
+
+.analyst-chips {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+.analyst-chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  color: var(--olive2);
+  background: rgba(138,148,85,0.1);
+  border: 1px solid rgba(138,148,85,0.25);
+  padding: 0.35rem 0.7rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.analyst-chip:hover { background: rgba(138,148,85,0.2); border-color: var(--olive2); color: var(--gold2); }
+
+.analyst-messages {
+  flex: 1; overflow-y: auto;
+  padding: 1.2rem 1.4rem;
+  display: flex; flex-direction: column; gap: 1rem;
+}
+
+.msg { max-width: 82%; line-height: 1.55; font-size: 0.83rem; }
+.msg-user {
+  align-self: flex-end;
+  background: rgba(200,184,106,0.1);
+  border: 1px solid rgba(200,184,106,0.22);
+  color: var(--cream);
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px 8px 2px 8px;
+}
+.msg-ai {
+  align-self: flex-start;
+  color: var(--text);
+  padding: 0.2rem 0;
+}
+.msg-ai-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.35rem;
+}
+.msg-ai-body { white-space: pre-wrap; }
+.msg-ai-body strong { color: var(--gold2); }
+.msg-ai-body code {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg3);
+  padding: 0.1rem 0.3rem;
+  border-radius: 2px;
+  font-size: 0.85em;
+}
+.msg-error { color: var(--red); }
+
+.msg-thinking { display: flex; gap: 0.3rem; align-self: flex-start; padding: 0.3rem 0; }
+.msg-thinking span {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--olive2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.msg-thinking span:nth-child(2) { animation-delay: 0.2s; }
+.msg-thinking span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,80%,100% { opacity: 0.25; } 40% { opacity: 1; } }
+
+.analyst-input-row {
+  display: flex; gap: 0.6rem;
+  padding: 0.9rem 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg3);
+}
+.analyst-input {
+  flex: 1;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 0.6rem 0.8rem;
+  resize: none;
+  min-height: 40px; max-height: 120px;
+}
+.analyst-input:focus { outline: none; border-color: var(--gold); }
+.analyst-send {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--gold);
+  border: none;
+  border-radius: 4px;
+  padding: 0 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.analyst-send:hover { background: var(--gold2); }
+.analyst-send:disabled { background: var(--muted); cursor: not-allowed; }
+
+.analyst-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  padding: 0.6rem 1rem 0;
+}
+
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -781,6 +903,9 @@ body::before {
   </button>
   <button class="tab-btn" onclick="switchTab('dcr',this)">
     📐 DCR Compliance <span class="tab-count">Static</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('analyst',this)">
+    🤖 AI Analyst
   </button>
 </div>
 
@@ -895,6 +1020,31 @@ body::before {
   <div style="margin-top:1rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);">
     ⚠ Static reference data extracted from uploaded DCR submission PDFs — not linked to the live Google Sheet. Update this tab manually if the drawing is revised.
   </div>
+</div>
+
+<!-- TAB: AI ANALYST -->
+<div class="tab-panel" id="panel-analyst">
+  <p class="section-title">AI Analyst — Ask Anything About This Contract</p>
+  <div class="analyst-wrap">
+    <div class="analyst-chips">
+      <div class="analyst-chip" onclick="askAnalyst('What are the top 3 most urgent items right now and why?')">Top 3 urgent items</div>
+      <div class="analyst-chip" onclick="askAnalyst('Run a sensitivity analysis: if the annual rent increases 15% every 5 years for the full 50-year term, what is total rent paid vs. a flat-rent scenario, and what is the compound annual growth rate?')">Rent sensitivity (50yr)</div>
+      <div class="analyst-chip" onclick="askAnalyst('Based on the Effective Date and 18-month construction deadline, what is the critical path and what should happen by when?')">Construction critical path</div>
+      <div class="analyst-chip" onclick="askAnalyst('Cross-check the DCR plot coverage and floor areas against typical KEZAD/ICAD industrial plot ratios — flag anything that looks off.')">DCR sanity check</div>
+      <div class="analyst-chip" onclick="askAnalyst('Summarize every Do-Not-Do rule and rank them by financial/legal risk if breached.')">Rank default risks</div>
+    </div>
+    <div class="analyst-messages" id="analystMessages">
+      <div class="msg msg-ai">
+        <div class="msg-ai-label">AI Analyst</div>
+        <div class="msg-ai-body">Hi Ali — I can see all four contract tabs plus the DCR compliance data on this dashboard. Ask me anything: status summaries, deadline math, rent sensitivity, risk ranking, or custom calculations. What would you like to look at?</div>
+      </div>
+    </div>
+    <div class="analyst-input-row">
+      <textarea class="analyst-input" id="analystInput" placeholder="Ask about deadlines, rent escalation, risk, DCR areas…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAnalystMessage();}"></textarea>
+      <button class="analyst-send" id="analystSendBtn" onclick="sendAnalystMessage()">Send</button>
+    </div>
+  </div>
+  <div class="analyst-note">Runs on Claude Sonnet, grounded in the live data from all tabs on this dashboard · Requires the companion backend (see /api/chat) to be deployed with an Anthropic API key</div>
 </div>
 
 <!-- FOOTER -->
@@ -1059,9 +1209,45 @@ async function fetchCSV(url) {
   return await res.text();
 }
 
+// ── GLOBAL DATA STORE (feeds the AI Analyst) ────────────────────────────────
+const DASHBOARD_DATA = {
+  construction: { headers: [], rows: [] },
+  recurring:    { headers: [], rows: [] },
+  milestones:   { headers: [], rows: [] },
+  donotdo:      { headers: [], rows: [] },
+  contractFacts: {
+    entity: 'Lumenae Industries L.L.C.',
+    counterparty: 'KEZAD Group / ADPC',
+    plot: '15G1, ICAD I, Khalifa Economic Zone',
+    agreementType: '50-year Musataha Agreement',
+    effectiveDate: '8 May 2026',
+    constructionDeadline: '18 months from Effective Date (i.e. ~8 Nov 2027)',
+    annualRent: 'AED 273,000, +15% every 5 years',
+  },
+  dcrData: {
+    plotAreaM2: 8043.59,
+    warehouseA: { groundFloorM2: 1829.69, mezzanineM2: 913.60, floors: 'G+1', groundFloorRatioPct: 22.74 },
+    warehouseB: { groundFloorM2: 1686.68, mezzanineM2: 834.92, floors: 'G+1', groundFloorRatioPct: 20.96 },
+    electricalPumpRoomM2: 55.62,
+    watchmanRoomM2: 14.96,
+    decorBoundaryWallLm: 67.10,
+    undecoratedBoundaryWallLm: 306.90,
+    carParkingM2: 341.55,
+    busParkingM2: 36.00,
+    plotCoveragePct: 49.28,
+    owner: 'Abu Dhabi Ports Company PJSC',
+    consultant: 'REMAS Engineering Consultants',
+    zone: 'Abu Dhabi Industrial City (ICAD I)',
+    submissionDate: '07 July 2026',
+    drawingNo: 'A02 (Rev 00)',
+    mepsProjectId: 'BAH-2026-002577-P01',
+  }
+};
+
 // ── RENDER CONSTRUCTION ───────────────────────────────────────────────────────
 function renderConstruction(data) {
   const { headers, rows } = data;
+  DASHBOARD_DATA.construction = data;
   document.getElementById('cnt1').textContent = rows.length;
   document.getElementById('kpi1').textContent = rows.length;
 
@@ -1103,6 +1289,7 @@ function renderConstruction(data) {
 // ── RENDER RECURRING ──────────────────────────────────────────────────────────
 function renderRecurring(data) {
   const { headers, rows } = data;
+  DASHBOARD_DATA.recurring = data;
   document.getElementById('cnt2').textContent = rows.length;
   document.getElementById('kpi3').textContent = rows.length;
 
@@ -1134,6 +1321,7 @@ function renderRecurring(data) {
 // ── RENDER MILESTONES ─────────────────────────────────────────────────────────
 function renderMilestones(data) {
   const { headers, rows } = data;
+  DASHBOARD_DATA.milestones = data;
   document.getElementById('cnt3').textContent = rows.length;
   document.getElementById('kpi4').textContent = rows.length;
 
@@ -1174,6 +1362,7 @@ function renderMilestones(data) {
 // ── RENDER DO NOT DO ──────────────────────────────────────────────────────────
 function renderDoNotDo(data) {
   const { headers, rows } = data;
+  DASHBOARD_DATA.donotdo = data;
   document.getElementById('cnt4').textContent = rows.length;
   document.getElementById('kpi5').textContent = rows.length;
 
@@ -1345,6 +1534,151 @@ function switchTab(name, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('panel-' + name).classList.add('active');
   btn.classList.add('active');
+}
+
+// ── AI ANALYST ────────────────────────────────────────────────────────────────
+// Backend endpoint that proxies to the Anthropic API (holds the API key server-side).
+// Deploy the companion server.js alongside this file — see project README.
+const ANALYST_ENDPOINT = '/api/chat';
+
+let ANALYST_HISTORY = []; // { role: 'user'|'assistant', content: string }
+
+function tableToText(label, data, maxRows = 60) {
+  const { headers, rows } = data;
+  if (!headers.length) return `${label}: (not loaded yet)`;
+  const shown = rows.slice(0, maxRows);
+  const lines = [
+    `${label} (${rows.length} rows${rows.length > maxRows ? ', showing first ' + maxRows : ''}):`,
+    headers.join(' | '),
+    ...shown.map(r => r.join(' | '))
+  ];
+  return lines.join('\n');
+}
+
+function buildAnalystContext() {
+  const cf = DASHBOARD_DATA.contractFacts;
+  const dcr = DASHBOARD_DATA.dcrData;
+  return `
+You are the AI Analyst embedded in Ali's Lumenae Industries KIZAD Contract Dashboard.
+Answer using ONLY the data below plus sound general reasoning/math. Be precise with numbers,
+show your work for any calculation or sensitivity analysis, and flag if data needed to fully
+answer isn't present rather than guessing. Keep answers focused and skimmable — use short
+paragraphs, bullet points, and bold key figures. Do not use markdown headers (#).
+
+── CONTRACT FACTS ──
+Entity: ${cf.entity}
+Counterparty: ${cf.counterparty}
+Plot: ${cf.plot}
+Agreement: ${cf.agreementType}
+Effective Date: ${cf.effectiveDate}
+Construction Deadline: ${cf.constructionDeadline}
+Annual Rent: ${cf.annualRent}
+Today's date: ${new Date().toDateString()}
+
+── DCR COMPLIANCE DATA (static, from submitted drawings) ──
+Plot Area: ${dcr.plotAreaM2} m²
+Warehouse-A: Ground ${dcr.warehouseA.groundFloorM2} m² + Mezzanine ${dcr.warehouseA.mezzanineM2} m², ${dcr.warehouseA.floors}, ground floor ratio ${dcr.warehouseA.groundFloorRatioPct}%
+Warehouse-B: Ground ${dcr.warehouseB.groundFloorM2} m² + Mezzanine ${dcr.warehouseB.mezzanineM2} m², ${dcr.warehouseB.floors}, ground floor ratio ${dcr.warehouseB.groundFloorRatioPct}%
+Electrical & Pump Room: ${dcr.electricalPumpRoomM2} m²
+Watchman Room: ${dcr.watchmanRoomM2} m²
+Decor Boundary Wall: ${dcr.decorBoundaryWallLm} lm | Undecorated Boundary Wall: ${dcr.undecoratedBoundaryWallLm} lm
+Car Parking: ${dcr.carParkingM2} m² | Bus Parking: ${dcr.busParkingM2} m²
+Plot Coverage: ${dcr.plotCoveragePct}%
+Owner: ${dcr.owner} | Consultant: ${dcr.consultant} | Zone: ${dcr.zone}
+Submission Date: ${dcr.submissionDate} | Drawing: ${dcr.drawingNo} | MEPS ID: ${dcr.mepsProjectId}
+
+── ${tableToText('CONSTRUCTION PHASE OBLIGATIONS', DASHBOARD_DATA.construction)}
+
+── ${tableToText('RECURRING OBLIGATIONS', DASHBOARD_DATA.recurring)}
+
+── ${tableToText('LONG-TERM MILESTONES (50-year horizon)', DASHBOARD_DATA.milestones)}
+
+── ${tableToText('DO NOT DO / EVENT OF DEFAULT RULES', DASHBOARD_DATA.donotdo)}
+`.trim();
+}
+
+function appendUserMessage(text) {
+  const wrap = document.getElementById('analystMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-user';
+  div.textContent = text;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function appendThinking() {
+  const wrap = document.getElementById('analystMessages');
+  const div = document.createElement('div');
+  div.className = 'msg-thinking';
+  div.id = 'analystThinking';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function removeThinking() {
+  const el = document.getElementById('analystThinking');
+  if (el) el.remove();
+}
+
+function appendAiMessage(text, isError = false) {
+  const wrap = document.getElementById('analystMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-ai';
+  const safe = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.+?)`/g, '<code>$1</code>');
+  div.innerHTML = `<div class="msg-ai-label">AI Analyst</div><div class="msg-ai-body${isError ? ' msg-error' : ''}">${safe}</div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+async function askAnalyst(question) {
+  document.getElementById('analystInput').value = question;
+  await sendAnalystMessage();
+}
+
+async function sendAnalystMessage() {
+  const input = document.getElementById('analystInput');
+  const btn = document.getElementById('analystSendBtn');
+  const question = input.value.trim();
+  if (!question) return;
+
+  appendUserMessage(question);
+  ANALYST_HISTORY.push({ role: 'user', content: question });
+  input.value = '';
+  btn.disabled = true;
+  appendThinking();
+
+  try {
+    const res = await fetch(ANALYST_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: buildAnalystContext(),
+        messages: ANALYST_HISTORY
+      })
+    });
+
+    if (!res.ok) throw new Error('Backend returned HTTP ' + res.status);
+    const data = await res.json();
+    const reply = data.reply || '(empty response)';
+
+    removeThinking();
+    appendAiMessage(reply);
+    ANALYST_HISTORY.push({ role: 'assistant', content: reply });
+  } catch (err) {
+    removeThinking();
+    appendAiMessage(
+      '⚠ Could not reach the AI backend (' + err.message + '). ' +
+      'This chat needs the companion server.js deployed on Railway with an ANTHROPIC_API_KEY ' +
+      'environment variable set — see the project README for setup.',
+      true
+    );
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
