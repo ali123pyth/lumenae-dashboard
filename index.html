@@ -854,6 +854,14 @@ body::before {
 .msg-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); color: var(--text2); }
 .msg-table tbody tr:last-child td { border-bottom: none; }
 
+/* ── RTL (ARABIC) SUPPORT ── */
+[dir="rtl"] { text-align: right; }
+[dir="rtl"].msg-user { text-align: right; }
+[dir="rtl"] .msg-table th,
+[dir="rtl"] .msg-table td { text-align: right; }
+[dir="rtl"] .msg-list { margin: 0.3rem 1.1rem 0.3rem 0; }
+[dir="rtl"] .flag-line { text-align: right; }
+
 /* ── PRINT CONTROLS ── */
 .msg-ai-toprow { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .msg-print-btn {
@@ -891,30 +899,7 @@ body::before {
 }
 .analyst-print-all:hover { background: rgba(138,148,85,0.18); border-color: var(--olive2); }
 
-/* Printable area — hidden on screen, shown only in print media */
-#printArea { display: none; }
-@media print {
-  body > *:not(#printArea) { display: none !important; }
-  #printArea {
-    display: block !important;
-    background: #fff; color: #1a1a1a;
-    font-family: 'DM Sans', sans-serif;
-    padding: 0;
-  }
-  #printArea .print-header {
-    border-bottom: 2px solid #1a1a1a;
-    padding-bottom: 0.6rem; margin-bottom: 1rem;
-  }
-  #printArea .print-title { font-family: 'DM Serif Display', serif; font-size: 1.4rem; }
-  #printArea .print-meta { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: #555; margin-top: 0.2rem; }
-  #printArea .print-q { font-weight: 600; margin: 1rem 0 0.3rem; }
-  #printArea .print-a { margin-bottom: 0.8rem; }
-  #printArea .flag-line { color: #b5402c !important; background: #fbe9e6 !important; border-color: #e0a99c !important; }
-  #printArea .msg-table th { background: #f0f0f0 !important; color: #333 !important; }
-  #printArea .msg-table td { color: #333 !important; }
-  #printArea .msg-subheading { color: #6d6d18 !important; }
-  #printArea a { color: inherit; text-decoration: none; }
-}
+/* Print/PDF now opens a separate self-contained window — see PRINT_CSS below */
 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -1717,6 +1702,12 @@ Submission Date: ${dcr.submissionDate} | Drawing: ${dcr.drawingNo} | MEPS ID: ${
 }
 
 // ── MINI MARKDOWN RENDERER (tables, lists, dividers, ⚠ flag lines) ─────────────
+const ARABIC_RE = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+function isArabicText(s) {
+  if (!s) return false;
+  return ARABIC_RE.test(s);
+}
+
 function escapeHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -1804,6 +1795,7 @@ function appendUserMessage(text) {
   const wrap = document.getElementById('analystMessages');
   const div = document.createElement('div');
   div.className = 'msg msg-user';
+  if (isArabicText(text)) div.setAttribute('dir', 'rtl');
   div.textContent = text;
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
@@ -1828,9 +1820,10 @@ function appendAiMessage(text, isError = false, question = null) {
   const wrap = document.getElementById('analystMessages');
   const div = document.createElement('div');
   div.className = 'msg msg-ai';
+  const rtlAttr = isArabicText(text) ? ' dir="rtl"' : '';
   const bodyHtml = isError
-    ? `<div class="msg-ai-body msg-error">${inlineFormat(text)}</div>`
-    : `<div class="msg-ai-body">${formatAiMarkdown(text)}</div>`;
+    ? `<div class="msg-ai-body msg-error"${rtlAttr}>${inlineFormat(text)}</div>`
+    : `<div class="msg-ai-body"${rtlAttr}>${formatAiMarkdown(text)}</div>`;
 
   const idx = MESSAGE_LOG.length;
   const printBtn = (!isError && question)
@@ -1844,7 +1837,41 @@ function appendAiMessage(text, isError = false, question = null) {
   if (question) MESSAGE_LOG.push({ question, answerText: text, isError });
 }
 
-// ── PRINT / PDF EXPORT ───────────────────────────────────────────────────────
+// ── PRINT / PDF EXPORT — opens a clean, self-contained window (avoids the ──────
+// dark-theme dashboard CSS entirely, so it's not fighting cascade/inheritance).
+const PRINT_CSS = `
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #1a1a1a; background: #fff;
+    margin: 0; padding: 32px 40px;
+    line-height: 1.5;
+  }
+  .print-header { border-bottom: 2px solid #1a1a1a; padding-bottom: 10px; margin-bottom: 20px; }
+  .print-title { font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: bold; }
+  .print-meta { font-family: 'Courier New', monospace; font-size: 11px; color: #555; margin-top: 4px; }
+  .print-q { font-weight: 700; font-size: 14px; margin: 22px 0 6px; }
+  .print-a { font-size: 13px; margin-bottom: 10px; }
+  .msg-subheading { font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #7a7020; margin: 14px 0 6px; font-weight: bold; }
+  .msg-p { margin: 5px 0; }
+  .msg-list { margin: 5px 0 5px 20px; padding: 0; }
+  .msg-list li { margin-bottom: 4px; }
+  .msg-divider { border: none; border-top: 1px solid #ccc; margin: 14px 0; }
+  .flag-line { color: #a33d29; background: #fbe9e6; border: 1px solid #e0a99c; border-radius: 3px; padding: 6px 10px; margin: 6px 0; font-size: 13px; }
+  .msg-table-wrap { overflow-x: auto; border: 1px solid #ccc; border-radius: 4px; margin: 8px 0; }
+  table.msg-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.msg-table th { font-family: 'Courier New', monospace; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: #444; background: #f0f0f0; padding: 7px 10px; text-align: left; border-bottom: 1px solid #ccc; }
+  table.msg-table td { padding: 7px 10px; border-bottom: 1px solid #e2e2e2; color: #222; }
+  table.msg-table tr:last-child td { border-bottom: none; }
+  strong { color: #111; }
+  code { font-family: 'Courier New', monospace; background: #f0f0f0; padding: 1px 4px; border-radius: 2px; }
+  [dir="rtl"] { text-align: right; }
+  [dir="rtl"] table.msg-table th,
+  [dir="rtl"] table.msg-table td { text-align: right; }
+  [dir="rtl"] .msg-list { margin: 5px 20px 5px 0; }
+  @media print { body { padding: 12px 18px; } }
+`;
+
 function buildPrintHeader() {
   const now = new Date();
   return `<div class="print-header">
@@ -1853,28 +1880,51 @@ function buildPrintHeader() {
   </div>`;
 }
 
+function openPrintWindow(bodyHtml, title) {
+  const w = window.open('', '_blank', 'width=900,height=1000');
+  if (!w) {
+    appendAiMessage('⚠ Your browser blocked the print window pop-up. Please allow pop-ups for this site and try again.', true);
+    return;
+  }
+  w.document.open();
+  w.document.write(
+    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + title + '</title>' +
+    '<style>' + PRINT_CSS + '</style></head><body>' + bodyHtml + '</body></html>'
+  );
+  w.document.close();
+
+  const doPrint = () => { try { w.focus(); w.print(); } catch (e) {} };
+  if (w.document.readyState === 'complete') {
+    setTimeout(doPrint, 150);
+  } else {
+    w.onload = () => setTimeout(doPrint, 150);
+    setTimeout(doPrint, 600); // fallback in case onload doesn't fire
+  }
+}
+
 function printResult(idx) {
   const item = MESSAGE_LOG[idx];
   if (!item) return;
-  const area = document.getElementById('printArea');
-  area.innerHTML = buildPrintHeader() +
-    `<div class="print-q">Q: ${escapeHtml(item.question)}</div>` +
-    `<div class="print-a">${formatAiMarkdown(item.answerText)}</div>`;
-  window.print();
+  const qDir = isArabicText(item.question) ? ' dir="rtl"' : '';
+  const aDir = isArabicText(item.answerText) ? ' dir="rtl"' : '';
+  const body = buildPrintHeader() +
+    `<div class="print-q"${qDir}>Q: ${escapeHtml(item.question)}</div>` +
+    `<div class="print-a"${aDir}>${formatAiMarkdown(item.answerText)}</div>`;
+  openPrintWindow(body, 'AI Analyst Result — Lumenae');
 }
 
 function printAllResults() {
-  const area = document.getElementById('printArea');
   let body = buildPrintHeader();
   if (MESSAGE_LOG.length === 0) {
     body += '<p>No AI Analyst results yet — ask a question first.</p>';
   } else {
     MESSAGE_LOG.forEach(item => {
-      body += `<div class="print-q">Q: ${escapeHtml(item.question)}</div><div class="print-a">${formatAiMarkdown(item.answerText)}</div>`;
+      const qDir = isArabicText(item.question) ? ' dir="rtl"' : '';
+      const aDir = isArabicText(item.answerText) ? ' dir="rtl"' : '';
+      body += `<div class="print-q"${qDir}>Q: ${escapeHtml(item.question)}</div><div class="print-a"${aDir}>${formatAiMarkdown(item.answerText)}</div>`;
     });
   }
-  area.innerHTML = body;
-  window.print();
+  openPrintWindow(body, 'AI Analyst — Full Session — Lumenae');
 }
 
 async function askAnalyst(question) {
@@ -1952,9 +2002,6 @@ setInterval(loadAll, 12 * 60 * 60 * 1000); // auto-refresh every 12 hours
     </div>
   </div>
 </div>
-
-<!-- Hidden container populated at print time — see @media print CSS -->
-<div id="printArea"></div>
 
 </body>
 </html>
