@@ -842,6 +842,45 @@ body::before {
 .lang-btn.active { color: var(--gold2); border-color: var(--gold); background: rgba(200,184,106,0.1); }
 .lang-btn:hover { color: var(--text); }
 
+.msg-speak-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 0.15rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.msg-speak-btn:hover { color: var(--gold2); border-color: var(--gold); background: rgba(200,184,106,0.08); }
+.msg-speak-btn.speaking {
+  color: var(--red);
+  border-color: rgba(212,84,58,0.4);
+  background: var(--red-bg);
+  animation: micPulse 1.2s ease-in-out infinite;
+}
+
+.analyst-auto-speak {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: auto;
+}
+.analyst-auto-speak.on { color: var(--gold2); border-color: var(--gold); background: rgba(200,184,106,0.1); }
+.analyst-auto-speak:hover { color: var(--text); }
+
 .analyst-note {
   font-family: 'DM Mono', monospace;
   font-size: 0.6rem;
@@ -1164,12 +1203,16 @@ body::before {
       <div class="analyst-chip" onclick="askAnalyst('Summarize every Do-Not-Do rule and rank them by financial/legal risk if breached.')">Rank default risks</div>
     </div>
     <div class="analyst-toolbar">
+      <button class="analyst-auto-speak" id="autoSpeakBtn" onclick="toggleAutoSpeak()" title="Automatically read new answers aloud">🔊 Auto-Speak: Off</button>
       <button class="analyst-print-all" id="printAllBtn" onclick="printAllResults()">🖨 Print / Save All as PDF</button>
     </div>
     <div class="analyst-messages" id="analystMessages">
       <div class="msg msg-ai">
-        <div class="msg-ai-label">AI Analyst</div>
-        <div class="msg-ai-body">Hi Ali — I can see all four contract tabs plus the DCR compliance data on this dashboard. Ask me anything: status summaries, deadline math, rent sensitivity, risk ranking, or custom calculations. What would you like to look at?</div>
+        <div class="msg-ai-toprow">
+          <div class="msg-ai-label">AI Analyst</div>
+          <button class="msg-speak-btn" onclick="speakMessage(document.getElementById('welcomeMsgText').innerText, this)" title="Read this aloud">🔊 Speak</button>
+        </div>
+        <div class="msg-ai-body" id="welcomeMsgText">Hi Ali — I can see all four contract tabs plus the DCR compliance data on this dashboard. Ask me anything: status summaries, deadline math, rent sensitivity, risk ranking, or custom calculations. What would you like to look at?</div>
       </div>
     </div>
     <div class="analyst-input-row">
@@ -1187,7 +1230,7 @@ body::before {
       <button class="analyst-send" id="analystSendBtn" onclick="sendAnalystMessage()">Send</button>
     </div>
   </div>
-  <div class="analyst-note">Runs on Claude Sonnet, grounded in the live data from all tabs on this dashboard · Requires the companion backend (see /api/chat) to be deployed with an Anthropic API key · 🎤 Voice input supports English &amp; Arabic (Chrome/Edge/Safari)</div>
+  <div class="analyst-note">Runs on Claude Sonnet, grounded in the live data from all tabs on this dashboard · Requires the companion backend (see /api/chat) to be deployed with an Anthropic API key · 🎤 Voice in &amp; 🔊 voice out, English &amp; Arabic (Chrome/Edge/Safari)</div>
 </div>
 
 <!-- FOOTER -->
@@ -1838,7 +1881,8 @@ function formatAiMarkdown(raw) {
   return html;
 }
 
-let MESSAGE_LOG = []; // { question, answerText, isError } — powers print/PDF export
+let MESSAGE_LOG = [];    // { question, answerText, isError } — powers print/PDF export
+let AI_MESSAGE_TEXTS = []; // raw text per AI message, indexed — powers text-to-speech
 
 function appendUserMessage(text) {
   const wrap = document.getElementById('analystMessages');
@@ -1874,16 +1918,21 @@ function appendAiMessage(text, isError = false, question = null) {
     ? `<div class="msg-ai-body msg-error"${rtlAttr}>${inlineFormat(text)}</div>`
     : `<div class="msg-ai-body"${rtlAttr}>${formatAiMarkdown(text)}</div>`;
 
-  const idx = MESSAGE_LOG.length;
+  const printIdx = MESSAGE_LOG.length;
   const printBtn = (!isError && question)
-    ? `<button class="msg-print-btn" onclick="printResult(${idx})" title="Print or save this result as PDF">🖨 Print</button>`
+    ? `<button class="msg-print-btn" onclick="printResult(${printIdx})" title="Print or save this result as PDF">🖨 Print</button>`
     : '';
 
-  div.innerHTML = `<div class="msg-ai-toprow"><div class="msg-ai-label">AI Analyst</div>${printBtn}</div>${bodyHtml}`;
+  const speakIdx = AI_MESSAGE_TEXTS.length;
+  const speakBtn = `<button class="msg-speak-btn" onclick="speakMessage(AI_MESSAGE_TEXTS[${speakIdx}], this)" title="Read this aloud">🔊 Speak</button>`;
+
+  div.innerHTML = `<div class="msg-ai-toprow"><div class="msg-ai-label">AI Analyst</div><div style="display:flex;gap:0.4rem;">${speakBtn}${printBtn}</div></div>${bodyHtml}`;
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
 
+  AI_MESSAGE_TEXTS.push(text);
   if (question) MESSAGE_LOG.push({ question, answerText: text, isError });
+  return div;
 }
 
 // ── PRINT / PDF EXPORT — opens a clean, self-contained window styled to ────────
@@ -2036,8 +2085,13 @@ async function sendAnalystMessage() {
     const reply = data.reply || '(empty response)';
 
     removeThinking();
-    appendAiMessage(reply, false, question);
+    const msgDiv = appendAiMessage(reply, false, question);
     ANALYST_HISTORY.push({ role: 'assistant', content: reply });
+
+    if (autoSpeakEnabled && msgDiv) {
+      const speakBtn = msgDiv.querySelector('.msg-speak-btn');
+      if (speakBtn) speakBtn.click();
+    }
   } catch (err) {
     removeThinking();
     appendAiMessage(
@@ -2150,6 +2204,95 @@ function stopVoiceInput() {
     }
   }
 })();
+
+// ── VOICE OUTPUT (text-to-speech, English & Arabic) ─────────────────────────
+let autoSpeakEnabled = false;
+let ttsUtterance = null;
+let ttsActiveBtn = null;
+
+// Warm up the voices list — some browsers load it asynchronously
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+}
+
+function toggleAutoSpeak() {
+  autoSpeakEnabled = !autoSpeakEnabled;
+  const btn = document.getElementById('autoSpeakBtn');
+  if (btn) {
+    btn.textContent = autoSpeakEnabled ? '🔊 Auto-Speak: On' : '🔊 Auto-Speak: Off';
+    btn.classList.toggle('on', autoSpeakEnabled);
+  }
+  if (!autoSpeakEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+// Converts rendered markdown (tables, lists, flags) into natural spoken text
+function markdownToSpeechText(raw) {
+  const div = document.createElement('div');
+  div.style.position = 'absolute';
+  div.style.left = '-9999px';
+  div.innerHTML = formatAiMarkdown(raw);
+  document.body.appendChild(div);
+  let text = div.innerText || div.textContent || '';
+  document.body.removeChild(div);
+  text = text
+    .replace(/⚠/g, 'Warning: ')
+    .replace(/[-]{3,}/g, '. ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text;
+}
+
+function pickVoiceFor(lang) {
+  if (!('speechSynthesis' in window)) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices || voices.length === 0) return null;
+  let v = voices.find(v => v.lang === lang);
+  if (!v) v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang.split('-')[0].toLowerCase()));
+  return v || null;
+}
+
+function resetSpeakButton(btn) {
+  if (btn) { btn.classList.remove('speaking'); btn.textContent = '🔊 Speak'; }
+  ttsUtterance = null;
+  ttsActiveBtn = null;
+}
+
+function speakMessage(rawText, btn) {
+  if (!('speechSynthesis' in window)) {
+    appendAiMessage('⚠ Text-to-speech isn\u2019t supported in this browser — try Chrome, Edge, or Safari.', true);
+    return;
+  }
+
+  // Clicking the currently-speaking message's button stops it (toggle)
+  if (window.speechSynthesis.speaking && ttsActiveBtn === btn) {
+    window.speechSynthesis.cancel();
+    resetSpeakButton(btn);
+    return;
+  }
+
+  // Stop any other speech first
+  window.speechSynthesis.cancel();
+  if (ttsActiveBtn) resetSpeakButton(ttsActiveBtn);
+
+  const speechText = markdownToSpeechText(rawText);
+  if (!speechText) return;
+
+  const lang = isArabicText(rawText) ? 'ar-SA' : 'en-US';
+  const utter = new SpeechSynthesisUtterance(speechText);
+  utter.lang = lang;
+  const voice = pickVoiceFor(lang);
+  if (voice) utter.voice = voice;
+  utter.rate = 1.0;
+
+  utter.onstart = () => { if (btn) { btn.classList.add('speaking'); btn.textContent = '⏹ Stop'; } };
+  utter.onend = () => resetSpeakButton(btn);
+  utter.onerror = () => resetSpeakButton(btn);
+
+  ttsUtterance = utter;
+  ttsActiveBtn = btn;
+  window.speechSynthesis.speak(utter);
+}
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 loadAll();
