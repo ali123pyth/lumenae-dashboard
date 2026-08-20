@@ -810,6 +810,112 @@ body::before {
   padding: 0.6rem 1rem 0;
 }
 
+/* ── AI MESSAGE MARKDOWN RENDERING ── */
+.msg-subheading {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0.9rem 0 0.4rem;
+}
+.msg-p { margin: 0.3rem 0; }
+.msg-list { margin: 0.3rem 0 0.3rem 1.1rem; padding: 0; }
+.msg-list li { margin-bottom: 0.25rem; }
+.msg-divider { border: none; border-top: 1px solid var(--border); margin: 0.9rem 0; }
+.flag-line {
+  color: var(--red);
+  background: var(--red-bg);
+  border: 1px solid rgba(212,84,58,0.25);
+  border-radius: 3px;
+  padding: 0.35rem 0.6rem;
+  margin: 0.3rem 0;
+  font-size: 0.8rem;
+}
+.msg-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+.msg-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.msg-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  background: var(--bg3);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border2);
+  white-space: nowrap;
+}
+.msg-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); color: var(--text2); }
+.msg-table tbody tr:last-child td { border-bottom: none; }
+
+/* ── PRINT CONTROLS ── */
+.msg-ai-toprow { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.msg-print-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 0.15rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.msg-print-btn:hover { color: var(--gold2); border-color: var(--gold); background: rgba(200,184,106,0.08); }
+
+.analyst-toolbar {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 0.5rem 1rem 0;
+}
+.analyst-print-all {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--olive2);
+  background: rgba(138,148,85,0.08);
+  border: 1px solid rgba(138,148,85,0.25);
+  border-radius: 3px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.analyst-print-all:hover { background: rgba(138,148,85,0.18); border-color: var(--olive2); }
+
+/* Printable area — hidden on screen, shown only in print media */
+#printArea { display: none; }
+@media print {
+  body > *:not(#printArea) { display: none !important; }
+  #printArea {
+    display: block !important;
+    background: #fff; color: #1a1a1a;
+    font-family: 'DM Sans', sans-serif;
+    padding: 0;
+  }
+  #printArea .print-header {
+    border-bottom: 2px solid #1a1a1a;
+    padding-bottom: 0.6rem; margin-bottom: 1rem;
+  }
+  #printArea .print-title { font-family: 'DM Serif Display', serif; font-size: 1.4rem; }
+  #printArea .print-meta { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: #555; margin-top: 0.2rem; }
+  #printArea .print-q { font-weight: 600; margin: 1rem 0 0.3rem; }
+  #printArea .print-a { margin-bottom: 0.8rem; }
+  #printArea .flag-line { color: #b5402c !important; background: #fbe9e6 !important; border-color: #e0a99c !important; }
+  #printArea .msg-table th { background: #f0f0f0 !important; color: #333 !important; }
+  #printArea .msg-table td { color: #333 !important; }
+  #printArea .msg-subheading { color: #6d6d18 !important; }
+  #printArea a { color: inherit; text-decoration: none; }
+}
+
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -1032,6 +1138,9 @@ body::before {
       <div class="analyst-chip" onclick="askAnalyst('Based on the Effective Date and 18-month construction deadline, what is the critical path and what should happen by when?')">Construction critical path</div>
       <div class="analyst-chip" onclick="askAnalyst('Cross-check the DCR plot coverage and floor areas against typical KEZAD/ICAD industrial plot ratios — flag anything that looks off.')">DCR sanity check</div>
       <div class="analyst-chip" onclick="askAnalyst('Summarize every Do-Not-Do rule and rank them by financial/legal risk if breached.')">Rank default risks</div>
+    </div>
+    <div class="analyst-toolbar">
+      <button class="analyst-print-all" id="printAllBtn" onclick="printAllResults()">🖨 Print / Save All as PDF</button>
     </div>
     <div class="analyst-messages" id="analystMessages">
       <div class="msg msg-ai">
@@ -1562,8 +1671,18 @@ function buildAnalystContext() {
 You are the AI Analyst embedded in Ali's Lumenae Industries KIZAD Contract Dashboard.
 Answer using ONLY the data below plus sound general reasoning/math. Be precise with numbers,
 show your work for any calculation or sensitivity analysis, and flag if data needed to fully
-answer isn't present rather than guessing. Keep answers focused and skimmable — use short
-paragraphs, bullet points, and bold key figures. Do not use markdown headers (#).
+answer isn't present rather than guessing. Keep answers focused and skimmable.
+
+FORMATTING RULES (strict):
+- Do not use markdown headers (#). Use a short **bold line** as a section label instead.
+- Any time you present 2+ numeric rows (revenue breakdowns, area breakdowns, comparisons,
+  sensitivity scenarios), use a markdown pipe table with a header row and a |---|---| separator
+  row. Prefer tables over prose for anything with rows and columns.
+- Any compliance risk, contractual warning, or "watch out" point MUST be its own line starting
+  with the ⚠ character, e.g. "⚠ Subletting requires ADPC's prior written consent (Clause 18.1)".
+  Do not bury flags inside a table cell or a normal sentence — always a standalone ⚠ line.
+- Use --- on its own line as a section divider between major blocks (e.g. between the table and
+  the flags section).
 
 ── CONTRACT FACTS ──
 Entity: ${cf.entity}
@@ -1597,6 +1716,90 @@ Submission Date: ${dcr.submissionDate} | Drawing: ${dcr.drawingNo} | MEPS ID: ${
 `.trim();
 }
 
+// ── MINI MARKDOWN RENDERER (tables, lists, dividers, ⚠ flag lines) ─────────────
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function inlineFormat(s) {
+  let out = escapeHtml(s)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.+?)`/g, '<code>$1</code>');
+  return out;
+}
+
+function renderMdTable(tableLines) {
+  // Drop the |---|---| separator row
+  const dataLines = tableLines.filter(l => !/^\s*\|?[\s:\-|]+\|?\s*$/.test(l));
+  const toCells = l => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+  const rows = dataLines.map(toCells);
+  if (rows.length === 0) return '';
+  const [headerRow, ...bodyRows] = rows;
+  const thead = `<tr>${headerRow.map(h => `<th>${inlineFormat(h)}</th>`).join('')}</tr>`;
+  const tbody = bodyRows.map(r => `<tr>${r.map(c => `<td>${inlineFormat(c)}</td>`).join('')}</tr>`).join('');
+  return `<div class="msg-table-wrap"><table class="msg-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>`;
+}
+
+function formatAiMarkdown(raw) {
+  const lines = raw.split('\n');
+  let html = '';
+  let inList = false;
+  const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Table block — consecutive lines starting/ending with |
+    if (/^\s*\|.*\|\s*$/.test(line)) {
+      closeList();
+      const block = [];
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) { block.push(lines[i]); i++; }
+      html += renderMdTable(block);
+      continue;
+    }
+
+    // Divider
+    if (/^\s*---+\s*$/.test(line)) {
+      closeList();
+      html += '<hr class="msg-divider">';
+      i++; continue;
+    }
+
+    // Flag line — starts with ⚠
+    if (/^\s*⚠/.test(line)) {
+      closeList();
+      html += `<div class="flag-line">${inlineFormat(line.trim())}</div>`;
+      i++; continue;
+    }
+
+    // Bullet list item
+    const bulletMatch = line.match(/^\s*[-•]\s+(.*)$/);
+    if (bulletMatch) {
+      if (!inList) { html += '<ul class="msg-list">'; inList = true; }
+      html += `<li>${inlineFormat(bulletMatch[1])}</li>`;
+      i++; continue;
+    }
+    closeList();
+
+    if (line.trim() === '') { i++; continue; }
+
+    // Bold-only line → subheading
+    const headingMatch = line.trim().match(/^\*\*(.+)\*\*$/);
+    if (headingMatch) {
+      html += `<div class="msg-subheading">${inlineFormat(headingMatch[1])}</div>`;
+      i++; continue;
+    }
+
+    html += `<p class="msg-p">${inlineFormat(line)}</p>`;
+    i++;
+  }
+  closeList();
+  return html;
+}
+
+let MESSAGE_LOG = []; // { question, answerText, isError } — powers print/PDF export
+
 function appendUserMessage(text) {
   const wrap = document.getElementById('analystMessages');
   const div = document.createElement('div');
@@ -1621,17 +1824,57 @@ function removeThinking() {
   if (el) el.remove();
 }
 
-function appendAiMessage(text, isError = false) {
+function appendAiMessage(text, isError = false, question = null) {
   const wrap = document.getElementById('analystMessages');
   const div = document.createElement('div');
   div.className = 'msg msg-ai';
-  const safe = text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`(.+?)`/g, '<code>$1</code>');
-  div.innerHTML = `<div class="msg-ai-label">AI Analyst</div><div class="msg-ai-body${isError ? ' msg-error' : ''}">${safe}</div>`;
+  const bodyHtml = isError
+    ? `<div class="msg-ai-body msg-error">${inlineFormat(text)}</div>`
+    : `<div class="msg-ai-body">${formatAiMarkdown(text)}</div>`;
+
+  const idx = MESSAGE_LOG.length;
+  const printBtn = (!isError && question)
+    ? `<button class="msg-print-btn" onclick="printResult(${idx})" title="Print or save this result as PDF">🖨 Print</button>`
+    : '';
+
+  div.innerHTML = `<div class="msg-ai-toprow"><div class="msg-ai-label">AI Analyst</div>${printBtn}</div>${bodyHtml}`;
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
+
+  if (question) MESSAGE_LOG.push({ question, answerText: text, isError });
+}
+
+// ── PRINT / PDF EXPORT ───────────────────────────────────────────────────────
+function buildPrintHeader() {
+  const now = new Date();
+  return `<div class="print-header">
+    <div class="print-title">Lumenae Industries — AI Analyst Report</div>
+    <div class="print-meta">Plot 15G1 · ICAD I · KIZAD Musataha Agreement · Generated ${now.toLocaleString('en-GB')}</div>
+  </div>`;
+}
+
+function printResult(idx) {
+  const item = MESSAGE_LOG[idx];
+  if (!item) return;
+  const area = document.getElementById('printArea');
+  area.innerHTML = buildPrintHeader() +
+    `<div class="print-q">Q: ${escapeHtml(item.question)}</div>` +
+    `<div class="print-a">${formatAiMarkdown(item.answerText)}</div>`;
+  window.print();
+}
+
+function printAllResults() {
+  const area = document.getElementById('printArea');
+  let body = buildPrintHeader();
+  if (MESSAGE_LOG.length === 0) {
+    body += '<p>No AI Analyst results yet — ask a question first.</p>';
+  } else {
+    MESSAGE_LOG.forEach(item => {
+      body += `<div class="print-q">Q: ${escapeHtml(item.question)}</div><div class="print-a">${formatAiMarkdown(item.answerText)}</div>`;
+    });
+  }
+  area.innerHTML = body;
+  window.print();
 }
 
 async function askAnalyst(question) {
@@ -1666,7 +1909,7 @@ async function sendAnalystMessage() {
     const reply = data.reply || '(empty response)';
 
     removeThinking();
-    appendAiMessage(reply);
+    appendAiMessage(reply, false, question);
     ANALYST_HISTORY.push({ role: 'assistant', content: reply });
   } catch (err) {
     removeThinking();
@@ -1709,6 +1952,9 @@ setInterval(loadAll, 12 * 60 * 60 * 1000); // auto-refresh every 12 hours
     </div>
   </div>
 </div>
+
+<!-- Hidden container populated at print time — see @media print CSS -->
+<div id="printArea"></div>
 
 </body>
 </html>
